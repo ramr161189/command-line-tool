@@ -42,12 +42,15 @@ class Fourty
 		uri=URI("https://fourtytwowords.herokuapp.com/word/#{@word}/definitions?api_key=fb8007781a73a8884e3821dc8f330cf2949b422d2a4be2bac9f1d5def50213d48f04cf2869255230d8e5adc4bee08ed27035a7a65745b5184b37848e93a691c099b93b1b072f24ad7908352ed10947e3")
 		res=Net::HTTP.get(uri)
 		json=JSON.parse(res)
+		begin
 		definition=String.new()
  		json.each  do |post|
- 			puts json
- 		definition=post['text']
+ 		definition+=post['text']
  		end
 			return definition
+		rescue
+			puts json
+		end
 		
  		#puts titile
 		# Create Files
@@ -59,14 +62,16 @@ class Fourty
 		@word=word
 		uri=URI("https://fourtytwowords.herokuapp.com/word/#{@word}/relatedWords?api_key=fb8007781a73a8884e3821dc8f330cf2949b422d2a4be2bac9f1d5def50213d48f04cf2869255230d8e5adc4bee08ed27035a7a65745b5184b37848e93a691c099b93b1b072f24ad7908352ed10947e3")
 		res=Net::HTTP.get(uri)
-		JSON.parse(res) 
 		json=JSON.parse(res)
-		synonyms=String.new()
-		puts json
-		json.each  do |post|
-		synonyms=post['words']
+		begin
+		definition=String.new()
+		json.each do |post|
+			definition=post['words']
 		end
-		return synonyms
+		return definition
+		rescue
+			puts json
+	end
 	end
 
 	def self.ant(word)
@@ -78,7 +83,7 @@ class Fourty
 		if json.length>1
 			return json[0]['words']
 		else
-			return  "Antynom not Found"
+			puts  "Antynom not Found"
 		end
 	end
 
@@ -103,8 +108,7 @@ class Fourty
 		valdef=self.def(value)
 		@definition=valdef.split(".")
 		@synonym=self.sin(value)
-		@antynom=self.ant(value)
-		$count=@definition.length+@synonym.length+@antynom.length
+		$count=@definition.length+@synonym.length
 		puts value
 		self.validation(value)	
 end
@@ -121,26 +125,27 @@ def self.validation(value)
 				valdef=self.def(@value)
 				@definition=valdef.split(".")
 				index=rand 0...@definition.length
-				@definition.delete_at(index)
 				$def_len=@definition
+				print "definition is:"
 				puts @definition[index]
+				@definition.delete_at(index)
 			when 1
 				$count=$count-1
 				@synonym=self.sin(@value)
 				index=rand 0...@synonym.length
-				@synonym.delete_at(index)
 				$syn_len=@synonym
+				print "Synonym is:"
 				puts @synonym[index]
+				@synonym.delete_at(index)
 			when 2
-				begin
-					raise 'Exception Created!'
-						@antynom=self.ant(@value)
-						index=rand 0...@antynom.length
-						@antynom.delete_at(index)
-						$ant_len=@antynom
-						puts @antynom[index]
-					rescue
-						puts 'there is no antynoms'
+				@antynom=self.ant(@value)
+				if(@antynom.length>1)
+				index=rand 0...@antynom.length
+				@antynom.delete_at(index)
+				$ant_len=@antynom
+				puts @antynom[index]
+				else
+				puts "antynom not found"
 				end
 			else
 				puts "no hint"
@@ -152,18 +157,20 @@ end
 def self.guess(word)
 	@word=word
 	print "enter the guess:"
-	guessing=gets
+	guessing=gets.chomp
 	if guessing.casecmp(word)==0
 		puts "correct"
-		$score=score+10
+		$score=$score+10
 		$count=0
+		puts "Your score is #{$score}"
 		self.play
 	else
 		t=Integer(0)
 		for i in 0...$syn_len.length
 			if guessing.casecmp?(@word)==0
-				$score=score+10
+				$score=$score+10
 				puts "correct"
+				puts "Your score is #{$score}"
 				t=1
 				$count=0
 				self.play
@@ -193,4 +200,3 @@ def self.guess(word)
 	end
 end
 end
-
